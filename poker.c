@@ -145,7 +145,7 @@ static long threeOfAKind(int pool[], int poolSize, int duplicateCards[]) {
 static long straight(int pool[], int poolSize, int hasDuplicates) {
 
     // check for low ace straight
-    if (pool[0] == 14 && pool[1] == 2 && pool[2] == 3 && pool[3] == 4 && pool[4] == 5) {
+    if (pool[4] == 14 && pool[0] == 2 && pool[1] == 3 && pool[2] == 4 && pool[3] == 5) {
         return 40500000000;
     }
 
