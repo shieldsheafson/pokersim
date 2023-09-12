@@ -42,16 +42,16 @@ static void insertionSort(int list[], int listLength, int sortedList[]) {
     }
 }
 
-static void listOfRandomIndices(int listOfIndices[], int numIndices) {
+static void createListOfRandomIndices(int listOfIndices[], int numIndices) {
     for (int i = 0; i < numIndices; i++) {
         listOfIndices[i] = -1;
     }
 
     int k = 1;
-    int num = (int)arc4random_uniform(50);
+    int num = (int)random()%50;
     listOfIndices[0] = num;
     while (k < numIndices) {
-        num = (int)arc4random_uniform(50);
+        num = (int)random()%50;
         if (!inList(num, listOfIndices, numIndices)) {
             listOfIndices[k] = num;
             k++;
@@ -68,6 +68,18 @@ static void findOtherValues(int list[], int listLength, int value, int otherValu
         }
     }
 } 
+
+static void createListOfCardsWithoutHero(int cards[], int hero[]) {
+    int n = 0;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 2; j < 15; j++) {
+            if (inList(j * 10 + i, hero, 2) == 0) {
+                cards[n] = j * 10 + i;
+                n += 1;
+            }
+        }
+    }
+}
 
 static void findDuplicates(int pool[], int poolSize, int duplicateCards[]) {
 
@@ -179,9 +191,9 @@ static long flush(int pool[], int suits[], int poolSize) {
 
 static long fullHouse(int duplicateCards[]) {
     if (duplicateCards[2] > 0 && (duplicateCards[1] != duplicateCards[2] && duplicateCards[1] > 0)) {
-        return duplicateCards[2] * 100 + duplicateCards[1] + 60000000000;
+        return duplicateCards[2] * 100000000 + duplicateCards[1]*1000000 + 60000000000;
     } else if (duplicateCards[2] > 0 && (duplicateCards[0] != duplicateCards[2] && duplicateCards[0] > 0)) {
-        return duplicateCards[2] * 100 + duplicateCards[0] + 60000000000;
+        return duplicateCards[2] * 100000000 + duplicateCards[0]*1000000 + 60000000000;
     }
     
     return 0;
@@ -191,7 +203,7 @@ static long fourOfAKind(int pool[], int poolSize, int duplicateCards[]) {
     int score[1];
     if (duplicateCards[3] > 0) {
         findOtherValues(pool, poolSize, duplicateCards[1], score);
-        return duplicateCards[3] * 100 + score[0] + 70000000000;
+        return duplicateCards[3] * 100000000 + score[0] * 1000000 + 70000000000;
     }
     
     return 0;
@@ -606,38 +618,29 @@ static long findBestScore(int cardsInPlay[]) {
 
 static void sim(int numOtherPlayers, int hero[], int numRep, double winsLosesTies[]) {
 
-    // create list of cards
     int cards[50];
-    int n = 0;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 2; j < 15; j++) {
-            if (inList(j * 10 + i, hero, 2) == 0) {
-                cards[n] = j * 10 + i;
-                n += 1;
-            }
-        }
-    }
+    createListOfCardsWithoutHero(cards, hero);
+    int cardsInPlay[7];
+    int cardsInPlayToScore[7]; // becomes sorted copy of cardsInPlay
 
     int numRandomIndices = 5 + numOtherPlayers * 2;
     int otherPlayerHands[(numOtherPlayers)*2];
-    int listOfRandomNumbers[numRandomIndices];
-    int cardsInPlay[7];
-    int cardsInPlayToScore[7];
-
+    int listOfRandomIndices[numRandomIndices];
+    
     long heroScore;
     long otherPlayerScore;
-
+    long bestOtherPlayerScore = 0;
     double wins = 0;
     double loses = 0;
     
     for (int i = 0; i < numRep; i++) {
-        listOfRandomIndices(listOfRandomNumbers, numRandomIndices);
+        createListOfRandomIndices(listOfRandomIndices, numRandomIndices);
 
         for (int j = 0; j < 5; j++) {
-            cardsInPlay[j] = cards[listOfRandomNumbers[j]];
+            cardsInPlay[j] = cards[listOfRandomIndices[j]];
         }
         for (int j = 0; j < numOtherPlayers*2; j++) {
-            otherPlayerHands[j] = cards[listOfRandomNumbers[j + 5]];
+            otherPlayerHands[j] = cards[listOfRandomIndices[j + 5]];
         }
 
         cardsInPlay[5] = hero[0];
@@ -651,23 +654,30 @@ static void sim(int numOtherPlayers, int hero[], int numRep, double winsLosesTie
             insertionSort(cardsInPlay, 7, cardsInPlayToScore);
             otherPlayerScore = findBestScore(cardsInPlayToScore);
 
-            if (heroScore > otherPlayerScore) {
-                wins += 1;
-            } else if (heroScore < otherPlayerScore) {
-                loses += 1;
+            if (otherPlayerScore > bestOtherPlayerScore) {
+                bestOtherPlayerScore = otherPlayerScore;
             }
         }
+
+        if (heroScore > bestOtherPlayerScore) {
+            wins += 1;
+        } else if (heroScore < bestOtherPlayerScore) {
+            loses += 1;
+        }
+        bestOtherPlayerScore = 0;
+        
     }
 
-    winsLosesTies[0] = wins/(double)numRep;
-    winsLosesTies[1] = loses/(double)numRep;
-    winsLosesTies[2] = ((double)numRep - wins - loses)/(double)numRep;
+    double numRepDouble = (double)numRep;
+    winsLosesTies[0] = wins / numRepDouble;
+    winsLosesTies[1] = loses / numRepDouble;
+    winsLosesTies[2] = (numRepDouble - wins - loses) / numRepDouble;
 } 
 
 int main() {
     int hero[2] = {141, 142};
     double winsLoses[3] = { 0 };
-    sim(1, hero, 1000000, winsLoses);
+    sim(1, hero, 10000000, winsLoses);
     printf("\nWins: %f\nLoses: %f\nTies: %f\n", winsLoses[0], winsLoses[1], winsLoses[2]);
     return 0;
 }
