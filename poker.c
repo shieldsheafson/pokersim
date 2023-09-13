@@ -105,18 +105,13 @@ static void findDuplicates(int pool[], int poolSize, int duplicateCards[]) {
     }
 }
 
-static int encodeCardValues(int list[], int listSize) {
-    int encodedValue = 0;
-    for (int i = 0; i < listSize; i++) {
-        double power = pow(10, 10+(i-listSize)*2);
-        encodedValue += list[i] * (int)power;
-    }
-
-    return encodedValue;
-}
-
 static long highCard(int pool[], int poolSize) {
-    return encodeCardValues(pool, poolSize);
+    int encodedValue = pool[0] 
+                       + pool[1] * 100 
+                       + pool[2] * 10000
+                       + pool[3] * 1000000
+                       + pool[4] * 100000000;
+    return encodedValue;
 }
 
 static long pair(int pool[], int poolSize, int duplicateCards[]) {
@@ -124,7 +119,11 @@ static long pair(int pool[], int poolSize, int duplicateCards[]) {
     if (duplicateCards[1] > 0) {
         score[3] = duplicateCards[1];
         findOtherValues(pool, poolSize, duplicateCards[1], score);
-        return encodeCardValues(score, 4) + 10000000000;
+        int encodedValue = score[0]
+                           + score[1] * 100 
+                           + score[2] * 10000
+                           + score[3] * 1000000;
+        return encodedValue + 10000000000;
     }
     
     return 0;
@@ -137,7 +136,10 @@ static long twoPair(int pool[], int poolSize, int duplicateCards[]) {
         findOtherValues(score, 3, duplicateCards[0], score);
         score[2] = duplicateCards[1];
         score[1] = duplicateCards[0];
-        return encodeCardValues(score, 3) + 20000000000;
+        int encodedValue = score[0]
+                           + score[1] * 100 
+                           + score[2] * 10000;
+        return encodedValue + 20000000000;
     }
     
     return 0;
@@ -148,7 +150,10 @@ static long threeOfAKind(int pool[], int poolSize, int duplicateCards[]) {
     if (duplicateCards[2] > 0) {
         score[2] = duplicateCards[2];
         findOtherValues(pool, poolSize, duplicateCards[2], score);
-        return encodeCardValues(score, 3) + 30000000000;
+        int encodedValue = score[0]
+                           + score[1] * 100 
+                           + score[2] * 10000;
+        return encodedValue + 30000000000;
     }
     
     return 0;
@@ -186,7 +191,12 @@ static long flush(int pool[], int suits[], int poolSize) {
         }
     }
 
-    return encodeCardValues(pool, poolSize) + 50000000000;
+    int encodedValue = pool[0] 
+                       + pool[1] * 100 
+                       + pool[2] * 10000
+                       + pool[3] * 1000000
+                       + pool[4] * 100000000;
+    return encodedValue + 50000000000;
 }
 
 static long fullHouse(int duplicateCards[]) {
